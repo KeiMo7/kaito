@@ -67,6 +67,7 @@ import (
 	"github.com/kaito-project/kaito/internal/manifests"
 	"github.com/kaito-project/kaito/internal/nodeprovision"
 	byoprovisioner "github.com/kaito-project/kaito/internal/nodeprovision/byo-provisioner"
+	"github.com/kaito-project/kaito/internal/quota"
 	"github.com/kaito-project/kaito/internal/tuning"
 	"github.com/kaito-project/kaito/pkg/catalog"
 	"github.com/kaito-project/kaito/pkg/consts"
@@ -93,6 +94,7 @@ type WorkspaceReconciler struct {
 	expectations        *expectations.ControllerExpectations
 	Estimator           estimator.NodesEstimator
 	nodeProvisioner     nodeprovision.NodeProvisioner
+	QuotaGate           *quota.Gate
 	modelMetadataClient modelMetadataHTTPClient
 }
 
@@ -170,6 +172,17 @@ func (c *WorkspaceReconciler) Reconcile(ctx context.Context, req reconcile.Reque
 	// update targetNodeCount for the workspace
 	if err = c.UpdateWorkspaceTargetNodeCount(ctx, workspaceObj); err != nil {
 		return reconcile.Result{}, err
+	}
+
+	// Unified in-cluster quota arbitration. When no quota policy or workload
+	// quota annotation is present the gate returns no decision and behavior is
+	// exactly the legacy estimate -> provision path.
+	admitted, admissionResult, err := c.admitByQuota(ctx, workspaceObj)
+	if err != nil {
+		return admissionResult, err
+	}
+	if !admitted {
+		return admissionResult, nil
 	}
 
 	return c.addOrUpdateWorkspace(ctx, workspaceObj)

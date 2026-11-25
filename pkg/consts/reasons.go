@@ -37,6 +37,14 @@ const (
 	ReasonNodePoolInvalid = "NodePoolInvalid"
 )
 
+// Cluster quota rejection reasons that require a user to change the claim or
+// quota configuration. They are not cloud capacity/subscription causes.
+const (
+	ReasonAdmissionDemandExceedsLimit = "DemandExceedsQuotaLimit"
+	ReasonAdmissionWaitTimedOut       = "AdmissionWaitTimedOut"
+	ReasonQuotaLimitIsZero            = "QuotaLimitIsZero"
+)
+
 // Inference failure reasons on the Workspace InferenceReady condition that need the user to act, such as changing the
 // instance type, the model image or the model configuration.
 const (
@@ -95,6 +103,14 @@ const (
 	ReasonModelMirrorDeleting = "ModelMirrorDeleting"
 	// ReasonInferencePending is reported on InferenceReady while the inference workload is not ready.
 	ReasonInferencePending = "WorkspaceInferenceStatusPending"
+
+	// In-cluster quota arbitration reasons. These are intentionally distinct
+	// from ReasonQuotaExceeded/ReasonCapacityUnavailable, which describe cloud
+	// subscription/capacity failures.
+	ReasonClusterQuotaInsufficient = "ClusterQuotaInsufficient"
+	ReasonTeamQuotaInsufficient    = "TeamQuotaInsufficient"
+	ReasonQuotaPreempted           = "PreemptedByHigherPriorityWorkspace"
+	ReasonPreemptionRolledBack     = "PreemptionRolledBack"
 )
 
 // IsProgressReason reports whether a not-ready Workspace condition reason is in progress rather than a failure.
@@ -108,7 +124,13 @@ func IsProgressReason(reason string) bool {
 		ReasonModelMirrorNotReady,
 		ReasonModelMirrorPending,
 		ReasonModelMirrorDeleting,
-		ReasonInferencePending:
+		ReasonInferencePending,
+		ReasonClusterQuotaInsufficient,
+		ReasonTeamQuotaInsufficient,
+		ReasonQuotaPreempted,
+		ReasonPreemptionRolledBack,
+		ReasonAdmissionDemandExceedsLimit,
+		ReasonQuotaLimitIsZero:
 		return true
 	}
 	return false
@@ -139,7 +161,8 @@ func IsTerminatedReason(reason string) bool {
 		ReasonModelStreamingServiceAccountInvalid,
 		ReasonModelStreamingInvalidAnnotations,
 		ReasonDownloadOOMKilled,
-		ReasonDownloadFailed:
+		ReasonDownloadFailed,
+		ReasonAdmissionWaitTimedOut:
 		return true
 	}
 	return false

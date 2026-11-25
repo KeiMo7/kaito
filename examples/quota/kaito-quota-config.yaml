@@ -1,0 +1,42 @@
+# Optional in-controller quota arbitration policy.
+# Install in the KAITO release namespace (RELEASE_NAMESPACE). When this
+# ConfigMap is absent and Workspaces carry no quota.kaito.sh/* annotations,
+# KAITO follows the legacy estimate -> provision path unchanged.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kaito-quota-config
+  namespace: kaito-system
+data:
+  config.json: |
+    {
+      "defaultLimit": {
+        "maxNodes": 8
+      },
+      "teams": {
+        "inference": {
+          "maxNodes": 4,
+          "maxWait": "30m"
+        },
+        "batch": {
+          "maxNodes": 2,
+          "maxWait": "1h"
+        }
+      },
+      "preemptionGrace": "5m"
+    }
+---
+# Optional per-Workspace overrides. An unset limit is unlimited; max-nodes: "0"
+# is an explicit deny. Priority is numerically higher wins; equal priorities
+# never preempt.
+#
+# metadata:
+#   labels:
+#     app: my-model
+#   annotations:
+#     quota.kaito.sh/team: inference
+#     quota.kaito.sh/priority: "100"
+#     quota.kaito.sh/max-nodes: "2"
+#     quota.kaito.sh/max-wait: "15m"
+#     # Ready serving workloads are preemptible only when this opt-in is set:
+#     quota.kaito.sh/yieldable: "true"

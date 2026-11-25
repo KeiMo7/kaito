@@ -54,6 +54,7 @@ type RootCause struct {
 // prerequisiteConditions must be True before inference can be ready; NodeClaimReady and NodesReady are checked
 // because ResourceReady reports ModelMirrorNotReady while the model weights download.
 var prerequisiteConditions = []kaitov1beta1.ConditionType{
+	kaitov1beta1.ConditionTypeAdmissionReady,
 	kaitov1beta1.ConditionTypeResourceStatus,
 	kaitov1beta1.ConditionTypeNodeClaimStatus,
 	kaitov1beta1.ConditionTypeNodeStatus,

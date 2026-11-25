@@ -28,6 +28,11 @@ const (
 	// ConditionTypeResourceStatus is the state when Resource has been created.
 	ConditionTypeResourceStatus = ConditionType("ResourceReady")
 
+	// ConditionTypeAdmissionReady reports unified in-cluster quota arbitration
+	// before node provisioning. It is independent from cloud QuotaExceeded and
+	// CapacityUnavailable reasons.
+	ConditionTypeAdmissionReady = ConditionType("AdmissionReady")
+
 	// WorkspaceConditionTypeInferenceStatus is the state when Inference service has been ready.
 	WorkspaceConditionTypeInferenceStatus = ConditionType("InferenceReady")
 

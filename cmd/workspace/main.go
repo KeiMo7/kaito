@@ -62,6 +62,7 @@ import (
 	karpenterutils "github.com/kaito-project/kaito/internal/k8s/karpenter"
 	"github.com/kaito-project/kaito/internal/modelmirror/download"
 	nodeprovisionmanager "github.com/kaito-project/kaito/internal/nodeprovision/manager"
+	"github.com/kaito-project/kaito/internal/quota"
 	"github.com/kaito-project/kaito/internal/runtimeenv"
 	"github.com/kaito-project/kaito/internal/version"
 	workspacewebhook "github.com/kaito-project/kaito/internal/webhook/workspace"
@@ -328,6 +329,11 @@ func main() {
 		recorder,
 		nodeProvisioner,
 	)
+	quotaNamespace, namespaceErr := k8sclient.GetReleaseNamespace()
+	if namespaceErr != nil {
+		klog.ErrorS(namespaceErr, "unable to determine release namespace for quota policy; falling back to Workspace namespaces")
+	}
+	workspaceReconciler.QuotaGate = quota.NewGate(kClient, quotaNamespace, nodeProvisioner, recorder)
 
 	if err = workspaceReconciler.SetupWithManager(mgr); err != nil {
 		klog.ErrorS(err, "unable to create controller", "controller", "Workspace")
